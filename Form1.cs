@@ -181,7 +181,7 @@ namespace WhisperX_ListenerTest
             string outputDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "WhisperXOutputs");
             Directory.CreateDirectory(outputDirectory); // Ensure the output directory exists
 
-            string command = $"activate whisperx && whisperx \"{filePath}\" --output_dir \"{outputDirectory}\" --model tiny --compute_type float16 --no_align";
+            string command = $"activate whisperx && whisperx \"{filePath}\" --output_dir \"{outputDirectory}\" --model tiny --compute_type float16 --no_align --output_format txt --language en";
             ProcessStartInfo startInfo = new ProcessStartInfo()
             {
                 FileName = "cmd.exe",
