@@ -32,12 +32,12 @@ namespace WhisperX_ListenerTest
         {
             this.textOutput = new System.Windows.Forms.TextBox();
             this.lblOutput = new System.Windows.Forms.Label();
-            this.btnListen = new System.Windows.Forms.Button();
-            this.btnStop = new System.Windows.Forms.Button();
             this.cbMomentary = new System.Windows.Forms.CheckBox();
             this.comboInputs = new System.Windows.Forms.ComboBox();
             this.lblInput = new System.Windows.Forms.Label();
             this.progressBarAudioLevel = new System.Windows.Forms.ProgressBar();
+            this.btnStop = new System.Windows.Forms.Button();
+            this.btnListen = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textOutput
@@ -59,28 +59,6 @@ namespace WhisperX_ListenerTest
             this.lblOutput.TabIndex = 1;
             this.lblOutput.Text = "Output";
             // 
-            // btnListen
-            // 
-            this.btnListen.Location = new System.Drawing.Point(112, 596);
-            this.btnListen.Margin = new System.Windows.Forms.Padding(6);
-            this.btnListen.Name = "btnListen";
-            this.btnListen.Size = new System.Drawing.Size(279, 87);
-            this.btnListen.TabIndex = 2;
-            this.btnListen.Text = "Listen";
-            this.btnListen.UseVisualStyleBackColor = true;
-            this.btnListen.Visible = false;
-            // 
-            // btnStop
-            // 
-            this.btnStop.Location = new System.Drawing.Point(112, 695);
-            this.btnStop.Margin = new System.Windows.Forms.Padding(6);
-            this.btnStop.Name = "btnStop";
-            this.btnStop.Size = new System.Drawing.Size(279, 87);
-            this.btnStop.TabIndex = 2;
-            this.btnStop.Text = "Stop";
-            this.btnStop.UseVisualStyleBackColor = true;
-            this.btnStop.Visible = false;
-            // 
             // cbMomentary
             // 
             this.cbMomentary.Appearance = System.Windows.Forms.Appearance.Button;
@@ -90,7 +68,7 @@ namespace WhisperX_ListenerTest
             this.cbMomentary.Name = "cbMomentary";
             this.cbMomentary.Size = new System.Drawing.Size(279, 73);
             this.cbMomentary.TabIndex = 3;
-            this.cbMomentary.Text = "Listen";
+            this.cbMomentary.Text = "Hold To Listen";
             this.cbMomentary.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.cbMomentary.UseVisualStyleBackColor = true;
             // 
@@ -122,6 +100,28 @@ namespace WhisperX_ListenerTest
             this.progressBarAudioLevel.Size = new System.Drawing.Size(447, 35);
             this.progressBarAudioLevel.TabIndex = 5;
             // 
+            // btnStop
+            // 
+            this.btnStop.Location = new System.Drawing.Point(255, 695);
+            this.btnStop.Margin = new System.Windows.Forms.Padding(6);
+            this.btnStop.Name = "btnStop";
+            this.btnStop.Size = new System.Drawing.Size(154, 87);
+            this.btnStop.TabIndex = 2;
+            this.btnStop.Text = "Stop";
+            this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.Visible = false;
+            // 
+            // btnListen
+            // 
+            this.btnListen.Location = new System.Drawing.Point(89, 695);
+            this.btnListen.Margin = new System.Windows.Forms.Padding(6);
+            this.btnListen.Name = "btnListen";
+            this.btnListen.Size = new System.Drawing.Size(154, 87);
+            this.btnListen.TabIndex = 2;
+            this.btnListen.Text = "Listen";
+            this.btnListen.UseVisualStyleBackColor = true;
+            this.btnListen.Visible = false;
+            // 
             // formMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 24F);
@@ -152,12 +152,12 @@ namespace WhisperX_ListenerTest
 
         private System.Windows.Forms.TextBox textOutput;
         private System.Windows.Forms.Label lblOutput;
-        private System.Windows.Forms.Button btnListen;
-        private System.Windows.Forms.Button btnStop;
         private System.Windows.Forms.CheckBox cbMomentary;
         private System.Windows.Forms.ComboBox comboInputs;
         private System.Windows.Forms.Label lblInput;
         private System.Windows.Forms.ProgressBar progressBarAudioLevel;
+        private System.Windows.Forms.Button btnStop;
+        private System.Windows.Forms.Button btnListen;
     }
 }
 

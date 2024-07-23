@@ -181,7 +181,7 @@ namespace WhisperX_ListenerTest
             string outputDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "WhisperXOutputs");
             Directory.CreateDirectory(outputDirectory); // Ensure the output directory exists
 
-            string command = $"activate whisperx && whisperx \"{filePath}\" --output_dir \"{outputDirectory}\"";
+            string command = $"activate whisperx && whisperx \"{filePath}\" --output_dir \"{outputDirectory}\" --model tiny --compute_type float16 --no_align";
             ProcessStartInfo startInfo = new ProcessStartInfo()
             {
                 FileName = "cmd.exe",
@@ -195,8 +195,14 @@ namespace WhisperX_ListenerTest
                 StartInfo = startInfo
             };
 
+            // Start timing
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
             process.Start();
             process.WaitForExit();
+
+            // Stop timing
+            stopwatch.Stop();
 
             // After the process completes, find the latest text file in the output directory
             var outputFile = new DirectoryInfo(outputDirectory)
@@ -209,13 +215,19 @@ namespace WhisperX_ListenerTest
                 // Read the contents of the latest file
                 string textOutputFile = File.ReadAllText(outputFile.FullName);
 
+                // Calculate the elapsed time and format it
+                TimeSpan elapsedTime = stopwatch.Elapsed;
+                string elapsedTimeFormatted = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                    elapsedTime.Hours, elapsedTime.Minutes, elapsedTime.Seconds,
+                    elapsedTime.Milliseconds / 10);
+
                 // Update the TextBox on the UI thread
                 this.Invoke(new Action(() =>
                 {
                     textOutput.Text += textOutputFile + Environment.NewLine;
+                    textOutput.Text += $"Transcription Time: {elapsedTimeFormatted}" + Environment.NewLine + Environment.NewLine;
                 }));
             }
         }
-
     }
 }
