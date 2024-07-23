@@ -7,6 +7,8 @@ using System.IO;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Net.Sockets;
+using System.Text;
 
 namespace WhisperX_ListenerTest
 {
@@ -14,15 +16,21 @@ namespace WhisperX_ListenerTest
     {
         private WaveInEvent waveIn;
         private Timer flashTimer;
-        private bool isListening = false;
         private WaveFileWriter waveFileWriter;
         private int fileCount = 0;
+        private TcpClient tcpClient;
+        private NetworkStream stream;
+        private bool isListening = false;
+        private bool isStreaming = false;
+        private float gain = 0.95f;
 
         public formMain()
         {
             InitializeComponent();
+            InitializeNetwork();
 
-            PopulateAudioInputs(comboInputs);
+            //PopulateAudioInputs(comboInputs);
+            InitializeAudioComponents(); // Ensure audio components are initialized
 
             flashTimer = new Timer
             {
@@ -30,15 +38,162 @@ namespace WhisperX_ListenerTest
             };
             flashTimer.Tick += FlashTimer_Tick;
 
-            cbMomentary.Appearance = Appearance.Button;
+            // Move these to outside of InitializeComponent
+            cbStream.MouseDown += cbStream_MouseDown;
+            cbStream.MouseUp += cbStream_MouseUp;
             cbMomentary.MouseDown += cbMomentary_MouseDown;
             cbMomentary.MouseUp += cbMomentary_MouseUp;
+
             cbMomentary.FlatStyle = FlatStyle.Flat; // Ensure it visually behaves like a button
+            cbStream.FlatStyle = FlatStyle.Flat; // Ensure it visually behaves like a button
+        }
+
+        private void InitializeNetwork()
+        {
+            try
+            {
+                tcpClient = new TcpClient(textHost.Text, int.Parse(textPort.Text));
+                // stream = tcpClient.GetStream();
+                cbConnected.Checked = tcpClient.Connected;
+            }
+            catch(Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+        }
+
+        private void InitializeAudioComponents()
+        {
+            var enumerator = new MMDeviceEnumerator();
+            comboInputs.Items.Clear(); // Clear existing items
+
+            // Enumerate only audio input devices
+            var captureDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active);
+            foreach (var device in captureDevices)
+            {
+                comboInputs.Items.Add(device.FriendlyName);
+            }
+
+            // Set event handler for device selection change
+            comboInputs.SelectedIndexChanged += ComboInputs_SelectedIndexChanged;
+
+            // Select a default device if available
+            if (comboInputs.Items.Count > 0)
+            {
+                comboInputs.SelectedIndex = 0; // Select the first device by default
+            }
+
+            // After populating the combo box, select the USB2.0 device if present
+            int usbDeviceIndex = comboInputs.Items.IndexOf(comboInputs.Items.Cast<string>().FirstOrDefault(item => item.Contains("USB2.0")));
+            if (usbDeviceIndex != -1)
+            {
+                comboInputs.SelectedIndex = usbDeviceIndex;
+            }
+
+        }
+
+        private void ComboInputs_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboInputs.SelectedIndex >= 0)
+            {
+                waveIn = null; // Reset waveIn to null before reinitializing
+                waveIn = new WaveInEvent();
+                waveIn.DeviceNumber = comboInputs.SelectedIndex;
+                waveIn.WaveFormat = new WaveFormat(16000, 16, 1); // 16 kHz, 16 bit, mono
+            }
+        }
+
+        private void cbStream_MouseDown(object sender, MouseEventArgs e)
+        {
+            StartStreaming(e);
+        }
+
+        private void cbStream_MouseUp(object sender, MouseEventArgs e)
+        {
+            StopStreaming(e);
+        }
+
+        private void StartStreaming(MouseEventArgs e)
+        {
+            if (waveIn == null)
+            {
+                MessageBox.Show("Audio input not initialized.");
+                return;
+            }
+
+            if (e.Button == MouseButtons.Left)
+            {
+                waveIn.DataAvailable -= WaveIn_DataAvailable; // Remove the previous event handler
+                waveIn.DataAvailable += WaveIn_StreamingDataAvailable;
+
+                try
+                {
+                    tcpClient.GetStream();
+                    isStreaming = true; // Set flag to true when starting
+                    cbStream.BackColor = Color.Red;
+                    flashTimer.Start();
+                    waveIn.StartRecording();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error starting stream: {ex.Message}");
+                }
+            }
+        }
+
+        private void StopStreaming(MouseEventArgs e)
+        {
+            if (isStreaming)
+            {
+                waveIn.StopRecording();
+
+                stream.Flush();
+                stream.Close();
+
+                cbStream.BackColor = default;
+                isStreaming = false;
+
+                progressBarAudioLevel.Invoke(new Action(() =>
+                {
+                    progressBarAudioLevel.Value = 0;
+                }));
+            }
+
+            // Close the stream and TCP client after ensuring all data has been sent
+            // CloseConnection();
+
+        }
+
+        private void WaveIn_StreamingDataAvailable(object sender, WaveInEventArgs e)
+        {
+            if (isStreaming && stream != null && tcpClient.Connected && waveIn != null) // Added null check for waveIn
+            {
+                stream.Write(e.Buffer, 0, e.BytesRecorded);
+            }
+
+
+            //  for "audio meter" functionality
+            int max = 0;
+            for (int index = 0; index < e.BytesRecorded; index += 2)
+            {
+                short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index]);
+                int absSample = Math.Abs((int)sample);
+                int volSAmple = (int)(absSample * gain);
+                if (volSAmple > max) max = volSAmple;
+            }
+
+            progressBarAudioLevel.Invoke(new Action(() =>
+            {
+                progressBarAudioLevel.Value = Math.Min(max, progressBarAudioLevel.Maximum);
+            }));
         }
 
         private void StartListening()
         {
-            if (isListening) return;
+            if (isListening || waveIn == null) return; // Check if waveIn is null
+
+            waveIn.DataAvailable -= WaveIn_DataAvailable; // Remove the previous event handler
+            waveIn.DataAvailable += WaveIn_StreamingDataAvailable;
 
             waveIn = new WaveInEvent
             {
@@ -58,6 +213,9 @@ namespace WhisperX_ListenerTest
         }
         private void StopListening()
         {
+
+            if (waveIn == null) return; // Check if waveIn is null before proceeding
+
             waveIn?.StopRecording();
             isListening = false;
             flashTimer.Stop();
@@ -77,20 +235,46 @@ namespace WhisperX_ListenerTest
 
         private void FlashTimer_Tick(object sender, EventArgs e)
         {
-            cbMomentary.BackColor = cbMomentary.BackColor == Color.Red ? default : Color.Red;
+            // Use isStreaming flag to control flashing
+            if (isStreaming)
+            {
+                cbStream.BackColor = cbStream.BackColor == Color.Red ? default : Color.Red;
+            }
+            else
+            {
+                cbStream.BackColor = default;
+                //flashTimer.Stop();
+            }
+
+            if (isListening)
+            {
+                cbMomentary.BackColor = cbStream.BackColor == Color.Red ? default : Color.Red;
+            }
+            else
+            {
+                cbMomentary.BackColor = default;
+                //flashTimer.Stop();
+            }
         }
+
 
         private void cbMomentary_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (e.Button == MouseButtons.Left && !isListening)
             {
                 StartListening();
+                cbMomentary.BackColor = Color.Red; // Start with red to indicate active listening
+                flashTimer.Start();
             }
         }
 
         private void cbMomentary_MouseUp(object sender, MouseEventArgs e)
         {
-            StopListening();
+            if (isListening)
+            {
+                StopListening();
+                cbMomentary.BackColor = default; // Revert back to default color
+            }
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -110,26 +294,6 @@ namespace WhisperX_ListenerTest
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
-        public void PopulateAudioInputs(ComboBox comboInputs)
-        {
-            var enumerator = new MMDeviceEnumerator();
-            int selectedIndex = 0;
-
-            foreach (var endpoint in enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active))
-            {
-                comboInputs.Items.Add(endpoint.FriendlyName);
-                if (endpoint.FriendlyName.IndexOf("USB2.0", StringComparison.OrdinalIgnoreCase) >= 0 && selectedIndex == 0)
-                {
-                    selectedIndex = comboInputs.Items.Count - 1;
-                }
-            }
-
-            if (comboInputs.Items.Count > 0)
-            {
-                comboInputs.SelectedIndex = selectedIndex;
-            }
-        }
-
         private void WaveIn_DataAvailable(object sender, WaveInEventArgs e)
         {
             if (waveFileWriter != null)
@@ -143,7 +307,8 @@ namespace WhisperX_ListenerTest
             {
                 short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index]);
                 int absSample = Math.Abs((int)sample);
-                if (absSample > max) max = absSample;
+                int volSAmple = (int)(absSample * gain);
+                if (volSAmple > max) max = volSAmple;
             }
 
             progressBarAudioLevel.Invoke(new Action(() =>
@@ -156,14 +321,15 @@ namespace WhisperX_ListenerTest
         {
             if (waveIn != null)
             {
-                waveIn.Dispose();
-                waveIn = null;
+                //waveIn.Dispose();
+                //waveIn = null;
                 progressBarAudioLevel.Invoke(new Action(() =>
                 {
                     progressBarAudioLevel.Value = 0;
                 }));
             }
         }
+
         private string GenerateFileName()
         {
             string directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recordings");
@@ -228,11 +394,92 @@ namespace WhisperX_ListenerTest
                     this.Invoke(new Action(() =>
                     {
                         textOutput.Text += textOutputFile + Environment.NewLine;
-                        textOutput.Text += $"Transcription Time: {elapsedTimeFormatted}" + Environment.NewLine + Environment.NewLine;
+                        textOutput.Text += $"Transcription time: {elapsedTimeFormatted}" + Environment.NewLine + Environment.NewLine;
                     }));
                 }
             });
         }
 
+        private void btnListen_Click(object sender, EventArgs e)
+        {
+            StartListening();
+        }
+
+        private void btnStop_Click(object sender, EventArgs e)
+        {
+            StopListening();
+        }
+
+        private void tbGain_Scroll(object sender, EventArgs e)
+        {
+            // Calculate the gain factor from the trackbar value
+            // Assuming tbGain's value range is 0 to 100 for 0% to 100% volume
+            gain = tbGain.Value / 100f;
+        }
+
+        private void formMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (stream != null && tcpClient.Connected)
+            {
+                //stream.Write(endOfTransmissionSignal, 0, endOfTransmissionSignal.Length);
+                stream.Flush();
+                // Wait for the server to acknowledge
+            }
+
+            //cbConnected.Checked = tcpClient.Connected;
+
+            if (stream != null)
+            {
+                stream.Close();
+                stream = null;
+            }
+            if (tcpClient != null)
+            {
+                tcpClient.Close();
+                tcpClient = null;
+            }
+
+            if(waveIn != null)
+            {
+                waveIn.Dispose();
+                waveIn = null;
+            }
+
+        }
+
+        private void cbConnected_CheckedChanged(object sender, EventArgs e)
+        {
+
+            if (!cbConnected.Checked)
+            {
+
+                // disco
+
+                if (stream != null && tcpClient.Connected)
+                {
+                    //stream.Write(endOfTransmissionSignal, 0, endOfTransmissionSignal.Length);
+                    stream.Flush();
+                    // Wait for the server to acknowledge
+                }
+
+                if (stream != null)
+                {
+                    stream.Close();
+                    stream = null;
+                }
+                if (tcpClient != null)
+                {
+                    tcpClient.Close();
+                    tcpClient = null;
+                }
+
+                cbConnected.Checked = false;
+            }
+            else
+            {
+                // cbConnected.Checked = tcpClient.Connected;
+                InitializeNetwork();
+            }
+        }
     }
 }
