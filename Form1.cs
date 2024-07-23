@@ -6,6 +6,7 @@ using NAudio.Wave;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace WhisperX_ListenerTest
 {
@@ -69,8 +70,8 @@ namespace WhisperX_ListenerTest
                 waveFileWriter.Dispose();
                 waveFileWriter = null;
 
-                // After closing the file, run the WhisperX command
-                RunWhisperX(fullPath);
+                // After closing the file, run the WhisperX command asynchronously
+                RunWhisperXAsync(fullPath);
             }
         }
 
@@ -176,58 +177,62 @@ namespace WhisperX_ListenerTest
 
             return fileName;
         }
-        private void RunWhisperX(string filePath)
+        private async void RunWhisperXAsync(string filePath)
         {
-            string outputDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "WhisperXOutputs");
-            Directory.CreateDirectory(outputDirectory); // Ensure the output directory exists
-
-            string command = $"activate whisperx && whisperx \"{filePath}\" --output_dir \"{outputDirectory}\" --model tiny --compute_type float16 --no_align --output_format txt --language en";
-            ProcessStartInfo startInfo = new ProcessStartInfo()
+            await Task.Run(() =>
             {
-                FileName = "cmd.exe",
-                Arguments = $"/C {command}",
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
+                string outputDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "WhisperXOutputs");
+                Directory.CreateDirectory(outputDirectory); // Ensure the output directory exists
 
-            Process process = new Process()
-            {
-                StartInfo = startInfo
-            };
-
-            // Start timing
-            Stopwatch stopwatch = Stopwatch.StartNew();
-
-            process.Start();
-            process.WaitForExit();
-
-            // Stop timing
-            stopwatch.Stop();
-
-            // After the process completes, find the latest text file in the output directory
-            var outputFile = new DirectoryInfo(outputDirectory)
-                .GetFiles("*.txt")
-                .OrderByDescending(f => f.LastWriteTime)
-                .FirstOrDefault();
-
-            if (outputFile != null)
-            {
-                // Read the contents of the latest file
-                string textOutputFile = File.ReadAllText(outputFile.FullName);
-
-                // Calculate the elapsed time and format it
-                TimeSpan elapsedTime = stopwatch.Elapsed;
-                string elapsedTimeFormatted = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-                    elapsedTime.Hours, elapsedTime.Minutes, elapsedTime.Seconds,
-                    elapsedTime.Milliseconds / 10);
-
-                // Update the TextBox on the UI thread
-                this.Invoke(new Action(() =>
+                string command = $"activate whisperx && whisperx \"{filePath}\" --output_dir \"{outputDirectory}\" --model tiny --no_align --output_format txt --language en";
+                ProcessStartInfo startInfo = new ProcessStartInfo()
                 {
-                    textOutput.Text += textOutputFile + Environment.NewLine;
-                    textOutput.Text += $"Transcription Time: {elapsedTimeFormatted}" + Environment.NewLine + Environment.NewLine;
-                }));
-            }
+                    FileName = "cmd.exe",
+                    Arguments = $"/C {command}",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                Process process = new Process()
+                {
+                    StartInfo = startInfo
+                };
+
+                // Start timing
+                Stopwatch stopwatch = Stopwatch.StartNew();
+
+                process.Start();
+                process.WaitForExit();
+
+                // Stop timing
+                stopwatch.Stop();
+
+                // After the process completes, find the latest text file in the output directory
+                var outputFile = new DirectoryInfo(outputDirectory)
+                    .GetFiles("*.txt")
+                    .OrderByDescending(f => f.LastWriteTime)
+                    .FirstOrDefault();
+
+                if (outputFile != null)
+                {
+                    // Read the contents of the latest file
+                    string textOutputFile = File.ReadAllText(outputFile.FullName);
+
+                    // Calculate the elapsed time and format it
+                    TimeSpan elapsedTime = stopwatch.Elapsed;
+                    string elapsedTimeFormatted = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                        elapsedTime.Hours, elapsedTime.Minutes, elapsedTime.Seconds,
+                        elapsedTime.Milliseconds / 10);
+
+                    // Update the TextBox on the UI thread
+                    this.Invoke(new Action(() =>
+                    {
+                        textOutput.Text += textOutputFile + Environment.NewLine;
+                        textOutput.Text += $"Transcription Time: {elapsedTimeFormatted}" + Environment.NewLine + Environment.NewLine;
+                    }));
+                }
+            });
         }
+
     }
 }
