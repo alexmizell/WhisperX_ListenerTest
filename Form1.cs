@@ -9,6 +9,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Text;
+using System.Net.Configuration;
+using System.Net.Http;
 
 namespace WhisperX_ListenerTest
 {
@@ -22,7 +24,9 @@ namespace WhisperX_ListenerTest
         private NetworkStream stream;
         private bool isListening = false;
         private bool isStreaming = false;
+        private bool formMainIsClosing = false;
         private float gain = 0.95f;
+        private long totalBytesSent = 0;
 
         public formMain()
         {
@@ -50,16 +54,35 @@ namespace WhisperX_ListenerTest
 
         private void InitializeNetwork()
         {
+
             try
             {
                 tcpClient = new TcpClient(textHost.Text, int.Parse(textPort.Text));
-                // stream = tcpClient.GetStream();
+                stream = tcpClient.GetStream();
                 cbConnected.Checked = tcpClient.Connected;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 MessageBox.Show(e.Message);
             }
+
+            if(tcpClient != null && tcpClient.Connected)
+            {
+                StartReceivingData(tcpClient);
+            }
+
+            DataReceived += (sender, e) =>
+            {
+                // Handle the received data
+                // Update the TextBox on the UI thread
+                this.Invoke(new Action(() =>
+                {
+                    string receivedText = Encoding.UTF8.GetString(e.Data);
+                    textOutput.Text += receivedText;
+                    textOutput.Text += Environment.NewLine;
+                }));
+            };
+
         }
 
         private void InitializeAudioComponents()
@@ -128,7 +151,15 @@ namespace WhisperX_ListenerTest
 
                 try
                 {
-                    tcpClient.GetStream();
+                    // tcpClient = new TcpClient(textHost.Text, int.Parse(textPort.Text));
+
+                    //SocketAsyncEventArgs socketAsyncEventArgs = new SocketAsyncEventArgs();
+                    //socketAsyncEventArgs.Completed += tcpClientRecieveData();
+
+                    //tcpClient.Client.ReceiveFromAsync(new SocketAsyncEventArgs());
+
+                    //stream = tcpClient.GetStream();
+                    //cbConnected.Checked = tcpClient.Connected;
                     isStreaming = true; // Set flag to true when starting
                     cbStream.BackColor = Color.Red;
                     flashTimer.Start();
@@ -141,14 +172,18 @@ namespace WhisperX_ListenerTest
             }
         }
 
+
         private void StopStreaming(MouseEventArgs e)
         {
             if (isStreaming)
             {
                 waveIn.StopRecording();
 
+                // CloseConnection();
                 stream.Flush();
-                stream.Close();
+                SendRemainingSilence();
+                //stream.Close();
+                //stream = null;
 
                 cbStream.BackColor = default;
                 isStreaming = false;
@@ -164,13 +199,24 @@ namespace WhisperX_ListenerTest
 
         }
 
+        private void SendRemainingSilence()
+        {
+            const int PACKET_SIZE = 65536;
+            long remainingBytes = PACKET_SIZE - (totalBytesSent % PACKET_SIZE);
+            if (remainingBytes > 0 && remainingBytes < PACKET_SIZE)
+            {
+                byte[] silence = new byte[remainingBytes];
+                stream.Write(silence, 0, silence.Length);
+            }
+        }
+
         private void WaveIn_StreamingDataAvailable(object sender, WaveInEventArgs e)
         {
             if (isStreaming && stream != null && tcpClient.Connected && waveIn != null) // Added null check for waveIn
             {
                 stream.Write(e.Buffer, 0, e.BytesRecorded);
+                totalBytesSent += e.BytesRecorded;
             }
-
 
             //  for "audio meter" functionality
             int max = 0;
@@ -178,7 +224,7 @@ namespace WhisperX_ListenerTest
             {
                 short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index]);
                 int absSample = Math.Abs((int)sample);
-                int volSAmple = (int)(absSample * gain);
+                int volSAmple = (int)(absSample * gain);  // gain scalilng from mic gain fader
                 if (volSAmple > max) max = volSAmple;
             }
 
@@ -256,7 +302,6 @@ namespace WhisperX_ListenerTest
                 //flashTimer.Stop();
             }
         }
-
 
         private void cbMomentary_MouseDown(object sender, MouseEventArgs e)
         {
@@ -419,32 +464,59 @@ namespace WhisperX_ListenerTest
 
         private void formMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (stream != null && tcpClient.Connected)
-            {
-                //stream.Write(endOfTransmissionSignal, 0, endOfTransmissionSignal.Length);
-                stream.Flush();
-                // Wait for the server to acknowledge
-            }
 
-            //cbConnected.Checked = tcpClient.Connected;
+            formMainIsClosing = true;
 
-            if (stream != null)
-            {
-                stream.Close();
-                stream = null;
-            }
-            if (tcpClient != null)
-            {
-                tcpClient.Close();
-                tcpClient = null;
-            }
+            CloseConnection();
 
-            if(waveIn != null)
-            {
-                waveIn.Dispose();
-                waveIn = null;
-            }
+        }
 
+        public event EventHandler<DataReceivedEventArgs> DataReceived;
+
+        protected virtual void OnDataReceived(byte[] data)
+        {
+            DataReceived?.Invoke(this, new DataReceivedEventArgs(data));
+        }
+
+        public class DataReceivedEventArgs : EventArgs
+        {
+            public byte[] Data { get; }
+
+            public DataReceivedEventArgs(byte[] data)
+            {
+                Data = data;
+            }
+        }
+
+        private void StartReceivingData(TcpClient tcpClient)
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    NetworkStream stream = tcpClient.GetStream();
+                    while (tcpClient.Connected)
+                    {
+                        if (stream.DataAvailable)
+                        {
+                            byte[] buffer = new byte[tcpClient.ReceiveBufferSize];
+                            int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                            byte[] actualData = new byte[bytesRead];
+                            Array.Copy(buffer, actualData, bytesRead);
+                            OnDataReceived(actualData);
+                        }
+                        else
+                        {
+                            await Task.Delay(100); // Wait a bit before checking again to reduce CPU usage
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Handle any exceptions (e.g., connection closed)
+                    Console.WriteLine($"Error receiving data: {ex.Message}");
+                }
+            });
         }
 
         private void cbConnected_CheckedChanged(object sender, EventArgs e)
@@ -452,33 +524,64 @@ namespace WhisperX_ListenerTest
 
             if (!cbConnected.Checked)
             {
-
-                // disco
-
-                if (stream != null && tcpClient.Connected)
-                {
-                    //stream.Write(endOfTransmissionSignal, 0, endOfTransmissionSignal.Length);
-                    stream.Flush();
-                    // Wait for the server to acknowledge
-                }
-
-                if (stream != null)
-                {
-                    stream.Close();
-                    stream = null;
-                }
-                if (tcpClient != null)
-                {
-                    tcpClient.Close();
-                    tcpClient = null;
-                }
-
-                cbConnected.Checked = false;
+                CloseConnection();
             }
             else
             {
-                // cbConnected.Checked = tcpClient.Connected;
-                InitializeNetwork();
+                OpenTCPConnection();
+            }
+        }
+
+        private void OpenTCPConnection()
+        {
+            // cbConnected.Checked = tcpClient.Connected;
+            if (tcpClient == null || !tcpClient.Connected)
+            {
+                try
+                {
+                    tcpClient = null;
+                    tcpClient = new TcpClient(textHost.Text, int.Parse(textPort.Text));
+                    // stream = tcpClient.GetStream();
+                    cbConnected.Checked = tcpClient.Connected;
+                    //tcpClient.GetStream();
+                    //isStreaming = true; // Set flag to true when starting
+                    //cbStream.BackColor = Color.Red;
+                    //flashTimer.Start();
+                    //waveIn.StartRecording();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error starting stream: {ex.Message}");
+                }
+            }
+        }
+        private void CloseConnection()
+        {
+            if (stream != null && tcpClient.Connected)
+            {
+                //stream.Write(endOfTransmissionSignal, 0, endOfTransmissionSignal.Length);
+                stream.Flush();
+                SendRemainingSilence();
+                // Wait for the server to acknowledge
+            }
+
+            if (stream != null)
+            {
+                stream.Close();
+                stream = null;
+            }
+            if (formMainIsClosing && tcpClient != null)
+            {
+                tcpClient.Close();
+                tcpClient = null;
+            }
+
+            // if (!formMainIsClosing) { cbConnected.Checked = false; }
+
+            if (formMainIsClosing && waveIn != null)
+            {
+                waveIn.Dispose();
+                waveIn = null;
             }
         }
     }

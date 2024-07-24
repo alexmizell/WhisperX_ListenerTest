@@ -51,6 +51,7 @@ namespace WhisperX_ListenerTest
             // 
             // textOutput
             // 
+            this.textOutput.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textOutput.Location = new System.Drawing.Point(279, 36);
             this.textOutput.Multiline = true;
             this.textOutput.Name = "textOutput";
@@ -113,6 +114,7 @@ namespace WhisperX_ListenerTest
             this.btnStop.TabIndex = 2;
             this.btnStop.Text = "Stop";
             this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.Visible = false;
             this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
             // 
             // btnListen
@@ -123,6 +125,7 @@ namespace WhisperX_ListenerTest
             this.btnListen.TabIndex = 2;
             this.btnListen.Text = "Listen";
             this.btnListen.UseVisualStyleBackColor = true;
+            this.btnListen.Visible = false;
             this.btnListen.Click += new System.EventHandler(this.btnListen_Click);
             // 
             // textPort
@@ -148,12 +151,13 @@ namespace WhisperX_ListenerTest
             // 
             this.cbConnected.Appearance = System.Windows.Forms.Appearance.Button;
             this.cbConnected.AutoSize = true;
-            this.cbConnected.Location = new System.Drawing.Point(96, 154);
+            this.cbConnected.Location = new System.Drawing.Point(96, 149);
             this.cbConnected.Margin = new System.Windows.Forms.Padding(2);
             this.cbConnected.Name = "cbConnected";
             this.cbConnected.Size = new System.Drawing.Size(84, 23);
             this.cbConnected.TabIndex = 8;
             this.cbConnected.Text = "CONNECTED";
+            this.cbConnected.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.cbConnected.UseVisualStyleBackColor = true;
             this.cbConnected.CheckedChanged += new System.EventHandler(this.cbConnected_CheckedChanged);
             // 
@@ -198,6 +202,7 @@ namespace WhisperX_ListenerTest
             this.tbGain.TabIndex = 9;
             this.tbGain.TickFrequency = 20;
             this.tbGain.Value = 95;
+            this.tbGain.Visible = false;
             this.tbGain.Scroll += new System.EventHandler(this.tbGain_Scroll);
             // 
             // lblGain
@@ -208,6 +213,7 @@ namespace WhisperX_ListenerTest
             this.lblGain.Size = new System.Drawing.Size(49, 13);
             this.lblGain.TabIndex = 10;
             this.lblGain.Text = "Mic Gain";
+            this.lblGain.Visible = false;
             // 
             // formMain
             // 
