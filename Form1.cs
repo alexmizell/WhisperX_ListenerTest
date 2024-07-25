@@ -31,9 +31,7 @@ namespace WhisperX_ListenerTest
         {
             InitializeComponent();
             InitializeNetwork();
-
-            //PopulateAudioInputs(comboInputs);
-            InitializeAudioComponents(); // Ensure audio components are initialized
+            InitializeAudioComponents(); 
 
             flashTimer = new Timer
             {
@@ -41,11 +39,13 @@ namespace WhisperX_ListenerTest
             };
             flashTimer.Tick += FlashTimer_Tick;
 
-            // Move these to outside of InitializeComponent
             cbStream.MouseDown += cbStream_MouseDown;
             cbStream.MouseUp += cbStream_MouseUp;
             cbMomentary.MouseDown += cbMomentary_MouseDown;
             cbMomentary.MouseUp += cbMomentary_MouseUp;
+            cbLatch.CheckedChanged += cbLatch_CheckedChanged;
+            cbStream.Click += cbStream_Click; // Handle Click for latching logic
+            
 
             cbMomentary.FlatStyle = FlatStyle.Flat; // Ensure it visually behaves like a button
             cbStream.FlatStyle = FlatStyle.Flat; // Ensure it visually behaves like a button
@@ -120,6 +120,16 @@ namespace WhisperX_ListenerTest
                 comboInputs.SelectedIndex = usbDeviceIndex;
             }
         }
+        private void cbLatch_CheckedChanged(object sender, EventArgs e)
+        {
+            // If cbLatch is unchecked and cbStream is checked, revert cbStream to unchecked
+            if (!cbLatch.Checked && cbStream.Checked)
+            {
+                cbStream.Checked = false;
+                MouseEventArgs mouseEventArgs = new MouseEventArgs(MouseButtons.Left, 0, 0, 0, 0);
+                StopStreaming(mouseEventArgs); // Ensure streaming is stopped when switching back to momentary behavior
+            }
+        }
 
         private void ComboInputs_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -135,12 +145,52 @@ namespace WhisperX_ListenerTest
 
         private void cbStream_MouseDown(object sender, MouseEventArgs e)
         {
-            StartStreaming(e);
+            // Check if the left mouse button is pressed
+            if (e.Button == MouseButtons.Left)
+            {
+                // If cbLatch is not checked, start streaming immediately on mouse down
+                if (!cbLatch.Checked)
+                {
+                    cbStream.Checked = true; // Momentarily check cbStream
+                    StartStreaming(e);
+                }
+                // If cbLatch is checked, we toggle the state in cbStream_Click instead
+            }
         }
 
         private void cbStream_MouseUp(object sender, MouseEventArgs e)
         {
-            StopStreaming(e);
+            // Check if the left mouse button was released
+            if (e.Button == MouseButtons.Left)
+            {
+                // If cbLatch is not checked, stop streaming and uncheck cbStream on mouse up
+                if (!cbLatch.Checked)
+                {
+                    StopStreaming(e);
+                    cbStream.Checked = false; // Uncheck cbStream after streaming stops
+                }
+                // If cbLatch is checked, do nothing here as the toggle is handled in cbStream_Click
+            }
+        }
+
+        private void cbStream_Click(object sender, EventArgs e)
+        {
+            // This event is triggered after the checkbox's checked state has been toggled
+            if (cbLatch.Checked)
+            {
+                // Latching behavior: Toggle streaming based on the cbStream.Checked state
+                if (cbStream.Checked)
+                {
+                    MouseEventArgs mouseEventArgs = new MouseEventArgs(MouseButtons.Left, 0, 0, 0, 0);
+                    StartStreaming(mouseEventArgs);
+                }
+                else
+                {
+                    MouseEventArgs mouseEventArgs = new MouseEventArgs(MouseButtons.Left, 0, 0, 0, 0);
+                    StopStreaming(mouseEventArgs);
+                }
+            }
+            // If cbLatch is not checked, the streaming start/stop is handled in MouseDown/Up events
         }
 
         private void StartStreaming(MouseEventArgs e)
@@ -219,7 +269,14 @@ namespace WhisperX_ListenerTest
             if (remainingBytes > 0 && remainingBytes < PACKET_SIZE)
             {
                 byte[] silence = new byte[remainingBytes];
-                stream.Write(silence, 0, silence.Length);
+                try
+                {
+                    stream.Write(silence, 0, silence.Length);
+                }
+                catch(Exception e)
+                {
+                    MessageBox.Show(e.Message);
+                }
             }
         }
 
