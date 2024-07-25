@@ -59,36 +59,35 @@ namespace WhisperX_ListenerTest
             {
                 tcpClient = new TcpClient(textHost.Text, int.Parse(textPort.Text));
                 cbConnected.Checked = tcpClient.Connected;
+                DataReceived += (sender, e) =>
+                {
+                    // Handle the received data
+                    // Update the TextBox on the UI thread
+                    this.Invoke(new Action(() =>
+                    {
+                        string receivedText = Encoding.UTF8.GetString(e.Data);
+
+                        receivedText = receivedText.Replace(".", "." + Environment.NewLine);
+                        receivedText = receivedText.Replace("!", "." + Environment.NewLine);
+                        receivedText = receivedText.Replace("?", "." + Environment.NewLine);
+
+                        // textOutput.Text += Environment.NewLine;
+                        textOutput.Text += receivedText + " ";
+                    }));
+                };
             }
             catch (Exception e)
             {
                 MessageBox.Show(e.Message);
+                cbConnected.Checked = false;
             }
-
-            GetStream();
 
             if (tcpClient != null && tcpClient.Connected && !isReceiving)
             {
                 StartReceivingData(tcpClient);
             }
 
-            DataReceived += (sender, e) =>
-            {
-                // Handle the received data
-                // Update the TextBox on the UI thread
-                this.Invoke(new Action(() =>
-                {
-                    string receivedText = Encoding.UTF8.GetString(e.Data);
-
-                    receivedText = receivedText.Replace(".", "." + Environment.NewLine);
-                    receivedText = receivedText.Replace("!", "." + Environment.NewLine);
-                    receivedText = receivedText.Replace("?", "." + Environment.NewLine);
-
-                    // textOutput.Text += Environment.NewLine;
-                    textOutput.Text += receivedText + " ";
-                }));
-            };
-
+            GetStream();
         }
 
         private void GetStream()
@@ -103,6 +102,7 @@ namespace WhisperX_ListenerTest
             catch (Exception e)
             {
                 MessageBox.Show(e.Message);
+                CloseConnection();
             }
         }
         private void InitializeAudioComponents()
