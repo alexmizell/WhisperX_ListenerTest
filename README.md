@@ -6,7 +6,7 @@ For the demo to work, you will need to have whisperx installed in a (mini)conda 
 
 https://github.com/m-bain/whisperX
 
-Alternatively, this program can be a C# front end for the Whisper-Streaming server, available here:
+Alternatively, this program can be a C# front end for the whisper_streaming server, available here:
 
 https://github.com/ufal/whisper_streaming
 
