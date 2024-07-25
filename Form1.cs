@@ -85,8 +85,13 @@ namespace WhisperX_ListenerTest
                 this.Invoke(new Action(() =>
                 {
                     string receivedText = Encoding.UTF8.GetString(e.Data);
-                    textOutput.Text += receivedText;
-                    textOutput.Text += Environment.NewLine;
+
+                    receivedText = receivedText.Replace(".", "." + Environment.NewLine);
+                    receivedText = receivedText.Replace("!", "." + Environment.NewLine);
+                    receivedText = receivedText.Replace("?", "." + Environment.NewLine);
+
+                    // textOutput.Text += Environment.NewLine;
+                    textOutput.Text += receivedText + " ";
                 }));
             };
 
@@ -103,9 +108,6 @@ namespace WhisperX_ListenerTest
             {
                 comboInputs.Items.Add(device.FriendlyName);
             }
-
-            // Set event handler for device selection change
-            comboInputs.SelectedIndexChanged += ComboInputs_SelectedIndexChanged;
 
             // Select a default device if available
             if (comboInputs.Items.Count > 0)
@@ -129,18 +131,6 @@ namespace WhisperX_ListenerTest
                 MouseEventArgs mouseEventArgs = new MouseEventArgs(MouseButtons.Left, 0, 0, 0, 0);
                 StopStreaming(mouseEventArgs); // Ensure streaming is stopped when switching back to momentary behavior
             }
-        }
-
-        private void ComboInputs_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            //if (comboInputs.SelectedIndex >= 0)
-            //{
-            //    waveIn = null; // Reset waveIn to null before reinitializing
-            //    waveIn?.Dispose();
-            //    waveIn = new WaveInEvent();
-            //    waveIn.DeviceNumber = comboInputs.SelectedIndex;
-            //    waveIn.WaveFormat = new WaveFormat(16000, 16, 1); // 16 kHz, 16 bit, mono
-            //}
         }
 
         private void cbStream_MouseDown(object sender, MouseEventArgs e)

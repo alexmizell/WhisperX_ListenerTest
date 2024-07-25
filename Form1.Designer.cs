@@ -52,6 +52,7 @@ namespace WhisperX_ListenerTest
             // 
             // textOutput
             // 
+            this.textOutput.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textOutput.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textOutput.Location = new System.Drawing.Point(279, 36);
             this.textOutput.Multiline = true;
@@ -78,7 +79,7 @@ namespace WhisperX_ListenerTest
             this.cbMomentary.Name = "cbMomentary";
             this.cbMomentary.Size = new System.Drawing.Size(152, 40);
             this.cbMomentary.TabIndex = 3;
-            this.cbMomentary.Text = "Hold To Listen";
+            this.cbMomentary.Text = "Hold To Record Audio / Transcribe with WhisperX";
             this.cbMomentary.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.cbMomentary.UseVisualStyleBackColor = true;
             // 
@@ -133,7 +134,7 @@ namespace WhisperX_ListenerTest
             // 
             // textPort
             // 
-            this.textPort.Location = new System.Drawing.Point(216, 182);
+            this.textPort.Location = new System.Drawing.Point(216, 178);
             this.textPort.Margin = new System.Windows.Forms.Padding(2);
             this.textPort.Name = "textPort";
             this.textPort.Size = new System.Drawing.Size(40, 20);
@@ -143,7 +144,7 @@ namespace WhisperX_ListenerTest
             // lblPort
             // 
             this.lblPort.AutoSize = true;
-            this.lblPort.Location = new System.Drawing.Point(163, 185);
+            this.lblPort.Location = new System.Drawing.Point(163, 181);
             this.lblPort.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblPort.Name = "lblPort";
             this.lblPort.Size = new System.Drawing.Size(53, 13);
@@ -154,7 +155,7 @@ namespace WhisperX_ListenerTest
             // 
             this.cbConnected.Appearance = System.Windows.Forms.Appearance.Button;
             this.cbConnected.AutoSize = true;
-            this.cbConnected.Location = new System.Drawing.Point(96, 149);
+            this.cbConnected.Location = new System.Drawing.Point(96, 205);
             this.cbConnected.Margin = new System.Windows.Forms.Padding(2);
             this.cbConnected.Name = "cbConnected";
             this.cbConnected.Size = new System.Drawing.Size(84, 23);
@@ -168,17 +169,17 @@ namespace WhisperX_ListenerTest
             // 
             this.cbStream.Appearance = System.Windows.Forms.Appearance.Button;
             this.cbStream.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.cbStream.Location = new System.Drawing.Point(61, 209);
+            this.cbStream.Location = new System.Drawing.Point(61, 233);
             this.cbStream.Name = "cbStream";
             this.cbStream.Size = new System.Drawing.Size(152, 40);
             this.cbStream.TabIndex = 3;
-            this.cbStream.Text = "Hold To Stream";
+            this.cbStream.Text = "Hold To Stream Audio to Whisper Server";
             this.cbStream.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.cbStream.UseVisualStyleBackColor = true;
             // 
             // textHost
             // 
-            this.textHost.Location = new System.Drawing.Point(46, 181);
+            this.textHost.Location = new System.Drawing.Point(46, 177);
             this.textHost.Margin = new System.Windows.Forms.Padding(2);
             this.textHost.Name = "textHost";
             this.textHost.Size = new System.Drawing.Size(111, 20);
@@ -188,7 +189,7 @@ namespace WhisperX_ListenerTest
             // lblHost
             // 
             this.lblHost.AutoSize = true;
-            this.lblHost.Location = new System.Drawing.Point(14, 183);
+            this.lblHost.Location = new System.Drawing.Point(14, 179);
             this.lblHost.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblHost.Name = "lblHost";
             this.lblHost.Size = new System.Drawing.Size(32, 13);
@@ -221,7 +222,7 @@ namespace WhisperX_ListenerTest
             // cbLatch
             // 
             this.cbLatch.AutoSize = true;
-            this.cbLatch.Location = new System.Drawing.Point(114, 256);
+            this.cbLatch.Location = new System.Drawing.Point(114, 280);
             this.cbLatch.Name = "cbLatch";
             this.cbLatch.Size = new System.Drawing.Size(53, 17);
             this.cbLatch.TabIndex = 11;
