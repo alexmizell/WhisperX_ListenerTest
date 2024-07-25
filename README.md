@@ -1,3 +1,4 @@
+![image](https://github.com/user-attachments/assets/f34867d5-7ca4-41b1-981d-cbb41c4ea37a)
 
 This demo program can record a 16khz .wav file and send it to whisperx for non-realtime (usually higher quality) transcriptions.  It can record multiple WAV files sequentially, and trascribe them asynchronously.  This is a fairly slow way to transcribe audio, as you have to wait for the entire wav file's worth of words to be processed before you can read any of it.
 
