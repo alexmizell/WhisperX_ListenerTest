@@ -1,15 +1,15 @@
 
-this demo program can record a 16khz .wav file and send it to whisperx for non-realtime (usually higher quality) transcriptions.
+This demo program can record a 16khz .wav file and send it to whisperx for non-realtime (usually higher quality) transcriptions.  It can record multiple WAV files sequentially, and trascribe them asynchronously.  This is a fairly slow way to transcribe audio, as you have to wait for the entire wav file's worth of words to be processed before you can read any of it.
 
-You will need to have whisperx installed per instructions on their sit:
+For the demo to work, you will need to have whisperx installed in a (mini)conda environment per instructions on their site:
 
 https://github.com/m-bain/whisperX
 
-Altnertiavely, this is a C# front end for Whisper-Streaming server, available here:
+Alternatively, this program can be a C# front end for the Whisper-Streaming server, available here:
 
 https://github.com/ufal/whisper_streaming
 
-You will need to replace the whisper_online_server.py file with my copy, as it has been slightly modified.
+WhisperX should already be installed for the streaming server to work.  You will also need to replace the whisper_online_server.py file with the copy from my repo, as it has been slightly modified.
 
 based on OpenAI original Whisper project:
 
