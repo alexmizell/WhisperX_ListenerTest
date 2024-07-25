@@ -46,6 +46,7 @@ namespace WhisperX_ListenerTest
             this.lblHost = new System.Windows.Forms.Label();
             this.tbGain = new System.Windows.Forms.TrackBar();
             this.lblGain = new System.Windows.Forms.Label();
+            this.cbLatch = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.tbGain)).BeginInit();
             this.SuspendLayout();
             // 
@@ -55,8 +56,10 @@ namespace WhisperX_ListenerTest
             this.textOutput.Location = new System.Drawing.Point(279, 36);
             this.textOutput.Multiline = true;
             this.textOutput.Name = "textOutput";
+            this.textOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textOutput.Size = new System.Drawing.Size(497, 397);
             this.textOutput.TabIndex = 0;
+            this.textOutput.TextChanged += new System.EventHandler(this.textOutput_TextChanged);
             // 
             // lblOutput
             // 
@@ -215,11 +218,22 @@ namespace WhisperX_ListenerTest
             this.lblGain.Text = "Mic Gain";
             this.lblGain.Visible = false;
             // 
+            // cbLatch
+            // 
+            this.cbLatch.AutoSize = true;
+            this.cbLatch.Location = new System.Drawing.Point(114, 256);
+            this.cbLatch.Name = "cbLatch";
+            this.cbLatch.Size = new System.Drawing.Size(53, 17);
+            this.cbLatch.TabIndex = 11;
+            this.cbLatch.Text = "Latch";
+            this.cbLatch.UseVisualStyleBackColor = true;
+            // 
             // formMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 446);
+            this.Controls.Add(this.cbLatch);
             this.Controls.Add(this.lblGain);
             this.Controls.Add(this.tbGain);
             this.Controls.Add(this.cbConnected);
@@ -270,6 +284,7 @@ namespace WhisperX_ListenerTest
         private System.Windows.Forms.Label lblHost;
         private System.Windows.Forms.TrackBar tbGain;
         private System.Windows.Forms.Label lblGain;
+        private System.Windows.Forms.CheckBox cbLatch;
     }
 }
 
