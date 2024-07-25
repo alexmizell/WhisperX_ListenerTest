@@ -64,14 +64,7 @@ namespace WhisperX_ListenerTest
                 MessageBox.Show(e.Message);
             }
 
-            try
-            {
-                stream = tcpClient.GetStream();
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message);
-            }
+            GetStream();
 
             if (tcpClient != null && tcpClient.Connected)
             {
@@ -97,6 +90,20 @@ namespace WhisperX_ListenerTest
 
         }
 
+        private void GetStream()
+        {
+            try
+            {
+                if (tcpClient != null && tcpClient.Connected)
+                {
+                    stream = tcpClient.GetStream();
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+        }
         private void InitializeAudioComponents()
         {
             var enumerator = new MMDeviceEnumerator();
@@ -272,6 +279,9 @@ namespace WhisperX_ListenerTest
 
         private void WaveIn_StreamingDataAvailable(object sender, WaveInEventArgs e)
         {
+
+            if(stream == null) { GetStream(); }
+
             if (isStreaming && stream != null && tcpClient.Connected && waveIn != null) // Added null check for waveIn
             {
                 stream.Write(e.Buffer, 0, e.BytesRecorded);
