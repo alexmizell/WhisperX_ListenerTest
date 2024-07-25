@@ -23,6 +23,7 @@ namespace WhisperX_ListenerTest
         private NetworkStream stream;
         private bool isListening = false;
         private bool isStreaming = false;
+        private bool isReceiving = false;
         private bool formMainIsClosing = false;
         private float gain = 0.95f;
         private long totalBytesSent = 0;
@@ -66,7 +67,7 @@ namespace WhisperX_ListenerTest
 
             GetStream();
 
-            if (tcpClient != null && tcpClient.Connected)
+            if (tcpClient != null && tcpClient.Connected && !isReceiving)
             {
                 StartReceivingData(tcpClient);
             }
@@ -591,6 +592,8 @@ namespace WhisperX_ListenerTest
                     Console.WriteLine($"Error receiving data: {ex.Message}");
                 }
             });
+
+            isReceiving = true;
         }
 
         private void cbConnected_CheckedChanged(object sender, EventArgs e)
@@ -649,9 +652,8 @@ namespace WhisperX_ListenerTest
             {
                 tcpClient.Close();
                 tcpClient = null;
+                cbConnected.Checked = false;
             }
-
-            // if (!formMainIsClosing) { cbConnected.Checked = false; }
 
             if (formMainIsClosing && waveIn != null)
             {
