@@ -107,6 +107,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="whisper_online_server.py" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
