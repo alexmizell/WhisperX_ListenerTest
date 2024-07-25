@@ -602,33 +602,34 @@ namespace WhisperX_ListenerTest
             }
             else
             {
-                OpenTCPConnection();
+                //OpenTCPConnection();
+                InitializeNetwork();
             }
         }
 
-        private void OpenTCPConnection()
-        {
-            // cbConnected.Checked = tcpClient.Connected;
-            if (tcpClient == null || !tcpClient.Connected)
-            {
-                try
-                {
-                    tcpClient = null;
-                    tcpClient = new TcpClient(textHost.Text, int.Parse(textPort.Text));
-                    // stream = tcpClient.GetStream();
-                    cbConnected.Checked = tcpClient.Connected;
-                    //tcpClient.GetStream();
-                    //isStreaming = true; // Set flag to true when starting
-                    //cbStream.BackColor = Color.Red;
-                    //flashTimer.Start();
-                    //waveIn.StartRecording();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error starting stream: {ex.Message}");
-                }
-            }
-        }
+        //private void OpenTCPConnection()
+        //{
+        //    // cbConnected.Checked = tcpClient.Connected;
+        //    if (tcpClient == null || !tcpClient.Connected)
+        //    {
+        //        try
+        //        {
+        //            tcpClient = null;
+        //            tcpClient = new TcpClient(textHost.Text, int.Parse(textPort.Text));
+        //            // stream = tcpClient.GetStream();
+        //            cbConnected.Checked = tcpClient.Connected;
+        //            //tcpClient.GetStream();
+        //            //isStreaming = true; // Set flag to true when starting
+        //            //cbStream.BackColor = Color.Red;
+        //            //flashTimer.Start();
+        //            //waveIn.StartRecording();
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            MessageBox.Show($"Error starting stream: {ex.Message}");
+        //        }
+        //    }
+        //}
         private void CloseConnection()
         {
             if (stream != null && tcpClient.Connected)
